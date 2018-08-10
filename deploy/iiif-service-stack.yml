@@ -1,10 +1,28 @@
 AWSTemplateFormatVersion: '2010-09-09'
-Description: Deploy the IIIF service on AWS Fargate, hosted in a private subnet, but accessible via a public load balancer.
+Description: >
+  Creates the IIIF service on AWS Fargate, hosted in a private subnet, but accessible via a public load balancer. Will create the following:
+    - A bucket that the IIIF service will read from for its images
+    - The IIIF ECS Task and Service (via Fargate)
+    - A Public Load Balancer to access the private IIIF resource over open Internet
+
+  Expects the following exports from an infrastructure stack:
+    - InfrastructureStackName:ContainerTaskExecutionRoleArn
+    - InfrastructureStackName:ClusterName
+    - InfrastructureStackName:IIIFSecurityGroupID
+    - InfrastructureStackName:PrivateSubnet1ID
+    - InfrastructureStackName:PrivateSubnet2ID
+    - InfrastructureStackName:VPCID
+    - InfrastructureStackName:PublicLoadBalancerSecurityGroup
+    - InfrastructureStackName:PublicSubnet1ID
+    - InfrastructureStackName:PublicSubnet2ID
+    - InfrastructureStackName:ContainerTaskExecutionRoleArn
+
 Parameters:
-  ServiceName:
+  InfrastructureStackName:
     Type: String
-    Default: ImageService
-    Description: A name for the service
+    Default: mellon-infrastructure
+    Description: The name of the parent infrastructure/networking stack that you created. Necessary
+                 to locate and reference resources created by that stack.
   ImageUrl:
     Type: String
     Default: mitlibraries/cantaloupe
@@ -54,21 +72,21 @@ Resources:
   TaskDefinition:
     Type: AWS::ECS::TaskDefinition
     Properties:
-      Family: !Ref 'ServiceName'
+      Family: !Sub '${AWS::StackName}-ImageService'
       Cpu: !Ref 'ContainerCpu'
       Memory: !Ref 'ContainerMemory'
       NetworkMode: awsvpc
       RequiresCompatibilities:
         - FARGATE
       ExecutionRoleArn:
-        Fn::ImportValue: 'MEL-ContainerTaskExecutionRoleArn'
+        Fn::ImportValue: !Join [':', [!Ref InfrastructureStackName, 'ContainerTaskExecutionRoleArn']]
       TaskRoleArn:
         Fn::If:
           - 'HasCustomRole'
           - !Ref 'Role'
           - !Ref "AWS::NoValue"
       ContainerDefinitions:
-        - Name: !Ref 'ServiceName'
+        - Name: !Sub '${AWS::StackName}-ImageService'
           Cpu: !Ref 'ContainerCpu'
           Memory: !Ref 'ContainerMemory'
           Image: !Ref 'ImageUrl'
@@ -82,9 +100,9 @@ Resources:
     Type: AWS::ECS::Service
     DependsOn: LoadBalancerRule
     Properties:
-      ServiceName: !Ref 'ServiceName'
+      ServiceName: !Sub '${AWS::StackName}-ImageService'
       Cluster:
-        Fn::ImportValue: 'MEL-ClusterName'
+        Fn::ImportValue: !Join [':', [!Ref InfrastructureStackName, 'ClusterName']]
       LaunchType: FARGATE
       DeploymentConfiguration:
         MaximumPercent: 200
@@ -93,13 +111,13 @@ Resources:
       NetworkConfiguration:
         AwsvpcConfiguration:
           SecurityGroups:
-            - Fn::ImportValue: 'MEL-IIIFSecurityGroupID'
+            - Fn::ImportValue: !Join [':', [!Ref InfrastructureStackName, 'IIIFSecurityGroupID']]
           Subnets:
-            - Fn::ImportValue: 'MEL-PrivateSubnet1ID'
-            - Fn::ImportValue: 'MEL-PrivateSubnet2ID'
+            - Fn::ImportValue: !Join [':', [!Ref InfrastructureStackName, 'PrivateSubnet1ID']]
+            - Fn::ImportValue: !Join [':', [!Ref InfrastructureStackName, 'PrivateSubnet2ID']]
       TaskDefinition: !Ref 'TaskDefinition'
       LoadBalancers:
-        - ContainerName: !Ref 'ServiceName'
+        - ContainerName: !Sub '${AWS::StackName}-ImageService'
           ContainerPort: !Ref 'ContainerPort'
           TargetGroupArn: !Ref 'TargetGroup'
 
@@ -117,12 +135,39 @@ Resources:
       HealthCheckTimeoutSeconds: 5
       HealthyThresholdCount: 2
       TargetType: ip
-      Name: !Ref 'ServiceName'
       Port: !Ref 'ContainerPort'
       Protocol: HTTP
       UnhealthyThresholdCount: 2
       VpcId:
-        Fn::ImportValue: 'MEL-VPCID'
+        Fn::ImportValue: !Join [':', [!Ref InfrastructureStackName, 'VPCID']]
+
+  PublicLoadBalancer:
+    Type: AWS::ElasticLoadBalancingV2::LoadBalancer
+    Properties:
+      Scheme: internet-facing
+      LoadBalancerAttributes:
+      - Key: idle_timeout.timeout_seconds
+        Value: '30'
+      SecurityGroups:
+        -
+          Fn::ImportValue: !Join [':', [!Ref InfrastructureStackName, 'PublicLoadBalancerSecurityGroup']]
+      Subnets:
+        -
+          Fn::ImportValue: !Join [':', [!Ref InfrastructureStackName, 'PublicSubnet1ID']]
+        -
+          Fn::ImportValue: !Join [':', [!Ref InfrastructureStackName, 'PublicSubnet2ID']]
+
+  PublicLoadBalancerListener:
+    Type: AWS::ElasticLoadBalancingV2::Listener
+    DependsOn:
+      - PublicLoadBalancer
+    Properties:
+      DefaultActions:
+        - TargetGroupArn: !Ref TargetGroup
+          Type: forward
+      LoadBalancerArn: !Ref PublicLoadBalancer
+      Port: 8182
+      Protocol: HTTP
 
   # Create a rule on the load balancer for routing traffic to the target group
   LoadBalancerRule:
@@ -134,6 +179,41 @@ Resources:
       Conditions:
         - Field: path-pattern
           Values: [!Ref 'Path']
-      ListenerArn:
-        Fn::ImportValue: 'MEL-PublicLoadBalancerListener'
+      ListenerArn: !Ref 'PublicLoadBalancerListener'
       Priority: !Ref 'Priority'
+
+  # This is the source bucket that the IIIF service will read from for its assets. Creation of this
+  # may get moved to a different repo at some point when we have the data layer
+  ImageSourceBucket:
+    Type: AWS::S3::Bucket
+
+  ImageSourceBucketPolicy:
+    Type: AWS::S3::BucketPolicy
+    Properties:
+      Bucket:
+        Ref: ImageSourceBucket
+      PolicyDocument:
+        Statement:
+          -
+            Action:
+              - "s3:GetObject"
+            Effect: "Allow"
+            Resource:
+              Fn::Join:
+                - ""
+                -
+                  - "arn:aws:s3:::"
+                  - !Ref "ImageSourceBucket"
+                  - "/*"
+            Principal:
+              AWS:
+                Fn::ImportValue:
+                  !Join [':', [!Ref InfrastructureStackName, 'ContainerTaskExecutionRoleArn']]
+
+Outputs:
+  PublicLoadBalancerDNSName:
+    Description: The dns name of the load balancer
+    Value: !GetAtt PublicLoadBalancer.DNSName
+  ImageSourceBucketName:
+    Description: The name of the bucket that will be used as the source for image files
+    Value: !Ref ImageSourceBucket
