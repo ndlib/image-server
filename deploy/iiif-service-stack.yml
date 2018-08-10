@@ -202,8 +202,7 @@ Resources:
               Fn::Join:
                 - ""
                 -
-                  - "arn:aws:s3:::"
-                  - !Ref "ImageSourceBucket"
+                  - !GetAtt ImageSourceBucket.Arn
                   - "/*"
             Principal:
               AWS:
