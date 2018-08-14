@@ -1,7 +1,6 @@
 # ImageServer
 IIIF Image server
 
-
 ## Local Dockerfile
 Current progress on using the dockerfile for a local instance.
 Local machine must have aws-vault and docker installed to work properly.
