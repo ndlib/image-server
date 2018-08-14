@@ -20,11 +20,11 @@ RUN wget https://github.com/medusa-project/cantaloupe/releases/download/v${ctl_v
 
 WORKDIR cantaloupe-${ctl_ver}
 
-# Configure image path to mapped volume and enable filesystem cach
+# Configure image path to mapped volume and enable filesystem cache
 RUN sed -e 's+home\/myself\/images+imageroot+' -e 's/#cache.server/cache.server/' < cantaloupe.properties.sample > ctlp.props \
   && mv cantaloupe-${ctl_ver}.war cantaloupe.war
 
-RUN   sed -i "s/endpoint.admin.enabled = false/endpoint.admin.enabled = true/g" ctlp.props\
+  RUN   sed -i "s/endpoint.admin.enabled = false/endpoint.admin.enabled = true/g" ctlp.props\
   &&    sed -i "s/endpoint.api.enabled = false/endpoint.api.enabled = true/g" ctlp.props\
   &&    sed -i "s/endpoint.admin.secret =/endpoint.admin.secret = admin/g" ctlp.props\
   &&    sed -i "s/endpoint.api.username =/endpoint.api.username = admin/g" ctlp.props\
@@ -37,7 +37,8 @@ RUN   sed -i "s/endpoint.admin.enabled = false/endpoint.admin.enabled = true/g" 
   &&    sed -i "s/processor.fallback_retrieval_strategy = DownloadStrategy/processor.fallback_retrieval_strategy = CacheStrategy/g" ctlp.props\
   &&    sed -i "s/cache.client.enabled = true/cache.client.enabled = false/g" ctlp.props\
   &&    sed -i "s/log.application.level = debug/log.application.level = all/g" ctlp.props\
-  &&    sed -i "s/RollingFileAppender.enabled = false/RollingFileAppender.enabled = true/g" ctlp.props
+  &&    sed -i "s/RollingFileAppender.enabled = false/RollingFileAppender.enabled = true/g" ctlp.props\
+  &&    sed -i "\$a processor.selection_strategy = AutomaticSelectionStrategy" ctlp.props
 
 EXPOSE 8182
 CMD source.sh
