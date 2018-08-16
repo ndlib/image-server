@@ -1,4 +1,4 @@
-FROM java:8
+FROM openjdk:slim
 
 ARG ctl_ver=4.0
 
