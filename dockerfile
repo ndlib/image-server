@@ -1,5 +1,4 @@
-
-FROM mostalive/ubuntu-14.04-oracle-jdk8
+FROM java:8
 
 ARG ctl_ver=4.0
 
