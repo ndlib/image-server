@@ -33,6 +33,7 @@ RUN sed -e 's+home\/myself\/images+imageroot+' -e 's/#cache.server/cache.server/
   &&    sed -i "s/endpoint.api.secret =/endpoint.api.secret = admin/g" ctlp.props\
   &&    sed -i "s/source.static = FilesystemSource/source.static = S3Source/g" ctlp.props\
   &&    sed -i "s/S3Source.endpoint =/S3Source.endpoint = s3.amazonaws.com/g" ctlp.props\
+  &&    sed -i "s/cache.server.derivative.enabled = false/cache.server.derivative.enabled = true/g" ctlp.props\
   &&    sed -i "s/cache.server.derivative =/cache.server.derivative = S3Cache/g" ctlp.props\
   &&    sed -i "s/S3Cache.endpoint =/S3Cache.endpoint = s3.amazonaws.com/g" ctlp.props\
   &&    sed -i "\$a AmazonS3Resolver.endpoint = s3.amazonaws.com" ctlp.props\
