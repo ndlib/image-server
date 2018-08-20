@@ -13,8 +13,7 @@ aws-vault exec admin --assume-role-ttl 1h -- bash
 docker run --name [run-instance-name] -p 8182:8182 \
      --env AWS_ACCESS_KEY_ID=$AWS_ACCESS_KEY_ID \
      --env AWS_SECRET_ACCESS_KEY=$AWS_SECRET_ACCESS_KEY --env AWS_SECURITY_TOKEN=$AWS_SECURITY_TOKEN \
-     --env AWS_SESSION_TOKEN=$AWS_SESSION_TOKEN --env IMAGE_BUCKET=[s3-bucket-name] [image-build-name]
-```
+     --env AWS_SESSION_TOKEN=$AWS_SESSION_TOKEN --env IMAGE_BUCKET=[s3-image-bucket-name] CACHE_BUCKET=[s3-cache-bucket-name][image-build-name]
 
--You should now be able to access the Admin Console from `localhost:8182/admin`
--Default username and password for the Admin Console are both admin
+- You should now be able to access the Admin Console from `localhost:8182/admin`
+  (Default username and password for the Admin Console are both admin)
