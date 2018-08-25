@@ -16,9 +16,8 @@ phases:
       - docker build -t $REPOSITORY_URI:latest -t $REPOSITORY_URI:$COMMIT_HASH .
       - docker tag $REPOSITORY_URI:latest $REPOSITORY_URI:$COMMIT_HASH
       - docker tag $REPOSITORY_URI:$COMMIT_HASH $REPOSITORY_URI:$COMMIT_HASH
-
   post_build:
-     commands:
+    commands:
       - echo Build completed on `date`
       - echo Pushing the Docker images...
       - docker push $REPOSITORY_URI:latest
