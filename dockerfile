@@ -43,7 +43,8 @@ RUN sed -e 's+home\/myself\/images+imageroot+' -e 's/#cache.server/cache.server/
   &&    sed -i "s/cache.client.enabled = true/cache.client.enabled = false/g" ctlp.props\
   &&    sed -i "s/log.application.level = debug/log.application.level = all/g" ctlp.props\
   &&    sed -i "s/RollingFileAppender.enabled = false/RollingFileAppender.enabled = true/g" ctlp.props\
-  &&    sed -i "\$a processor.selection_strategy = AutomaticSelectionStrategy" ctlp.props
+  &&    sed -i "\$a processor.selection_strategy = AutomaticSelectionStrategy" ctlp.props\
+  &&    sed -i "s/processor.tif =/processor.tif = JaiProcessor/g" ctlp.props
 
 EXPOSE 8182
 CMD source.sh
