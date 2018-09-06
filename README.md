@@ -17,3 +17,14 @@ docker run --name [run-instance-name] -p 8182:8182 \
 
 - You should now be able to access the Admin Console from `localhost:8182/admin`
   (Default username and password for the Admin Console are both admin)
+```
+## Testing with [Newman CLI](https://github.com/postmanlabs/newman)
+
+1. [Install](https://github.com/postmanlabs/newman#getting-started) newman and nodejs
+2. Assume `qa-lib-developer` role in AWS `testlibnd` account
+3. Export these parameters from AWS parameter store using [postman_utils](https://github.com/h-parekh/postman_utils#export_parameter_from_awsjs)
+  * `/all/qa/newman/image-server/environment/dev`
+4. Run tests
+```console
+newman run /path/to/collection -e /path/to/environment/file
+```
