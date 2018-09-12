@@ -21,10 +21,5 @@ docker run --name [run-instance-name] -p 8182:8182 \
 ## Testing with [Newman CLI](https://github.com/postmanlabs/newman)
 
 1. [Install](https://github.com/postmanlabs/newman#getting-started) newman and nodejs
-2. Assume `qa-lib-developer` role in AWS `testlibnd` account
-3. Export these parameters from AWS parameter store using [postman_utils](https://github.com/h-parekh/postman_utils#export_parameter_from_awsjs)
-  * `/all/qa/newman/image-server/environment/dev`
-4. Run tests
-```console
-newman run /path/to/collection -e /path/to/environment/file
-```
+2. Create JSON files for all the [environment, global](https://www.getpostman.com/docs/v6/postman/environments_and_globals/intro_to_environments_and_globals) and [data files](https://www.getpostman.com/docs/v6/postman/collection_runs/working_with_data_files) needed in the test collection.  See [this guide](https://github.com/h-parekh/postman_utils/blob/master/postman_variables.md#working-with-variables-in-postmannewman) for additional examples.
+3. Follow newman's [instructions](https://github.com/postmanlabs/newman#newman-run-collection-file-source-options) for running tests
