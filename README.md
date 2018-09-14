@@ -17,3 +17,9 @@ docker run --name [run-instance-name] -p 8182:8182 \
 
 - You should now be able to access the Admin Console from `localhost:8182/admin`
   (Default username and password for the Admin Console are both admin)
+```
+## Testing with [Newman CLI](https://github.com/postmanlabs/newman)
+
+1. [Install](https://github.com/postmanlabs/newman#getting-started) newman and nodejs
+2. Create JSON files for all the [environment, global](https://www.getpostman.com/docs/v6/postman/environments_and_globals/intro_to_environments_and_globals) and [data files](https://www.getpostman.com/docs/v6/postman/collection_runs/working_with_data_files) needed in the test collection.  See [this guide](https://github.com/h-parekh/postman_utils/blob/master/postman_variables.md#working-with-variables-in-postmannewman) for additional examples.
+3. Follow newman's [instructions](https://github.com/postmanlabs/newman#newman-run-collection-file-source-options) for running tests
