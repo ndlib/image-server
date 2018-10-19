@@ -1,25 +1,42 @@
 # ImageServer
 IIIF Image server
 
-## Local Dockerfile
-Current progress on using the dockerfile for a local instance.
-Local machine must have aws-vault and docker installed to work properly.
-An S3 instance will be used to pull images from.
+## System Requirements
+* Docker
+* An AWS S3 bucket for source images
+* An AWS S3 bucket for caching derivatives
+* A valid AWS role that can read from the source images bucket and read/write to the derivatives bucket
+* [aws-vault](https://github.com/99designs/aws-vault), or similar, for assuming the role
 
-Terminal commands to build and run docker instance in directory dockerfile is located
+## Building the image
+Run the following from the root of the project:
 ```console
-docker build . -t [image-build-name]
-aws-vault exec admin --assume-role-ttl 1h -- bash
-docker run --name [run-instance-name] -p 8182:8182 \
-     --env AWS_ACCESS_KEY_ID=$AWS_ACCESS_KEY_ID \
-     --env AWS_SECRET_ACCESS_KEY=$AWS_SECRET_ACCESS_KEY --env AWS_SECURITY_TOKEN=$AWS_SECURITY_TOKEN \
-     --env AWS_SESSION_TOKEN=$AWS_SESSION_TOKEN --env IMAGE_BUCKET=[s3-image-bucket-name] CACHE_BUCKET=[s3-cache-bucket-name][image-build-name]
-
-- You should now be able to access the Admin Console from `localhost:8182/admin`
-  (Default username and password for the Admin Console are both admin)
+docker build . -t image-service
 ```
+
+## Running the image
+Before you run, you must assume the role necessary to access the buckets. Here's an example using aws-vault:
+```console
+aws-vault exec vault-profile-name --assume-role-ttl 1h -- bash
+```
+Start the container using the built image, replacing [s3-image-bucket-name] and [s3-cache-bucket-name] with valid bucket names:
+```console
+docker run --name image-service -p 8182:8182 \
+  --env AWS_ACCESS_KEY_ID=$AWS_ACCESS_KEY_ID \
+  --env AWS_SECRET_ACCESS_KEY=$AWS_SECRET_ACCESS_KEY \
+  --env AWS_SECURITY_TOKEN=$AWS_SECURITY_TOKEN \
+  --env AWS_SESSION_TOKEN=$AWS_SESSION_TOKEN \
+  --env IMAGE_BUCKET=[s3-image-bucket-name] \
+  --env CACHE_BUCKET=[s3-cache-bucket-name] \
+  image-service
+```
+You should now be able to access the service at `localhost:8182`. For example, if you have a mypicture.tif within the image source bucket, here's how to retrieve the full image: http://localhost:8182/iiif/2/mypicture.tif/full/full/0/default.jpg
+
 ## Testing with [Newman CLI](https://github.com/postmanlabs/newman)
 
 1. [Install](https://github.com/postmanlabs/newman#getting-started) newman and nodejs
-2. Create JSON files for all the [environment, global](https://www.getpostman.com/docs/v6/postman/environments_and_globals/intro_to_environments_and_globals) and [data files](https://www.getpostman.com/docs/v6/postman/collection_runs/working_with_data_files) needed in the test collection.  See [this guide](https://github.com/h-parekh/postman_utils/blob/master/postman_variables.md#working-with-variables-in-postmannewman) for additional examples.
-3. Follow newman's [instructions](https://github.com/postmanlabs/newman#newman-run-collection-file-source-options) for running tests
+2. Create JSON files for the [environment](https://www.getpostman.com/docs/v6/postman/environments_and_globals/intro_to_environments_and_globals). See `spec/local_env.json` for an example of the key value pairs needed to test a local instance.
+3. Run the tests, ex:
+```console
+newman run spec/image-server.postman_collection.json -e spec/local_env.json
+```

@@ -26,7 +26,7 @@ WORKDIR cantaloupe-${ctl_ver}
 RUN sed -e 's+home\/myself\/images+imageroot+' -e 's/#cache.server/cache.server/' < cantaloupe.properties.sample > ctlp.props \
   && mv cantaloupe-${ctl_ver}.war cantaloupe.war
 
-  RUN   sed -i "s/endpoint.admin.enabled = false/endpoint.admin.enabled = true/g" ctlp.props\
+RUN     sed -i "s/endpoint.admin.enabled = false/endpoint.admin.enabled = true/g" ctlp.props\
   &&    sed -i "s/endpoint.api.enabled = false/endpoint.api.enabled = true/g" ctlp.props\
   &&    sed -i "s/endpoint.admin.secret =/endpoint.admin.secret = admin/g" ctlp.props\
   &&    sed -i "s/endpoint.api.username =/endpoint.api.username = admin/g" ctlp.props\
@@ -44,7 +44,13 @@ RUN sed -e 's+home\/myself\/images+imageroot+' -e 's/#cache.server/cache.server/
   &&    sed -i "s/log.application.level = debug/log.application.level = all/g" ctlp.props\
   &&    sed -i "s/RollingFileAppender.enabled = false/RollingFileAppender.enabled = true/g" ctlp.props\
   &&    sed -i "\$a processor.selection_strategy = AutomaticSelectionStrategy" ctlp.props\
-  &&    sed -i "s/processor.tif =/processor.tif = JaiProcessor/g" ctlp.props
+  &&    sed -i "s/processor.tif =/processor.tif = JaiProcessor/g" ctlp.props\
+  &&    sed -i "s/endpoint.admin.enabled.*=.*/endpoint.admin.enabled = false/g" ctlp.props\
+  &&    sed -i "s/endpoint.admin.username.*=.*/endpoint.admin.username =/g" ctlp.props\
+  &&    sed -i "s/endpoint.admin.secret.*=.*/endpoint.admin.secret =/g" ctlp.props\
+  &&    sed -i "s/endpoint.api.enabled.*=.*/endpoint.api.enabled = false/g" ctlp.props\
+  &&    sed -i "s/endpoint.api.username.*=.*/endpoint.api.username =/g" ctlp.props\
+  &&    sed -i "s/endpoint.api.secret.*=.*/endpoint.api.secret =/g" ctlp.props
 
 EXPOSE 8182
 CMD source.sh

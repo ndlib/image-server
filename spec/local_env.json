@@ -1,0 +1,13 @@
+{
+  "name": "image_server.test",
+  "values": [
+    {
+      "key": "image-server-host",
+      "value": "localhost:8182"
+    },
+    {
+      "key": "image-server-protocol",
+      "value": "http"
+    }
+  ]
+}
