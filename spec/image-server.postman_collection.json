@@ -12,8 +12,8 @@
 				"header": [],
 				"body": {},
 				"url": {
-					"raw": "https://{{image-server-host}}/",
-					"protocol": "https",
+					"raw": "{{image-server-protocol}}://{{image-server-host}}/",
+					"protocol": "{{image-server-protocol}}",
 					"host": [
 						"{{image-server-host}}"
 					],
