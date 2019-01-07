@@ -24,7 +24,11 @@ phases:
       - docker push $REPOSITORY_URI:$COMMIT_HASH
       - printf '[{"name":"%s","imageUri":"%s"}]' $TEST_CONTAINER_NAME $REPOSITORY_URI:$IMAGE_TAG > imagedefinitionstest.json
       - printf '[{"name":"%s","imageUri":"%s"}]' $PROD_CONTAINER_NAME $REPOSITORY_URI:$IMAGE_TAG > imagedefinitionsprod.json
+      - printf $CODEBUILD_RESOLVED_SOURCE_VERSION > sha.txt
+      - printf $REPOSITORY_URI:$IMAGE_TAG > deployed_tag.txt
 artifacts:
   files:
     - imagedefinitionstest.json
     - imagedefinitionsprod.json
+    - sha.txt
+    - deployed_tag.txt
